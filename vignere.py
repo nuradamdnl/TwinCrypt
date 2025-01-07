@@ -1,21 +1,19 @@
 import tkinter as tk
 from tkinter import messagebox
+import secrets
+import string
 
+# Function to generate a Vigenère key by repeating it to match the length of the message
+def generate_vigenere_key(msg, keyword):
+    return (keyword * (len(msg) // len(keyword))) + keyword[:len(msg) % len(keyword)]
 
-# Vigenère cipher functions
-def generate_key(msg, key):
-    key = list(key)
-    if len(msg) == len(key):
-        return key
-    else:
-        for i in range(len(msg) - len(key)):
-            key.append(key[i % len(key)])
-    return "".join(key)
+# Function to generate a random One-Time Pad key of the same length as the ciphertext
+def generate_otp_key(msg):
+    return ''.join(secrets.choice(string.ascii_letters) for _ in range(len(msg)))
 
-
+# Vigenère cipher encryption
 def encrypt_vigenere(msg, key):
     encrypted_text = []
-    key = generate_key(msg, key)
     for i in range(len(msg)):
         char = msg[i]
         if char.isupper():
@@ -27,10 +25,9 @@ def encrypt_vigenere(msg, key):
         encrypted_text.append(encrypted_char)
     return "".join(encrypted_text)
 
-
+# Vigenère cipher decryption
 def decrypt_vigenere(msg, key):
     decrypted_text = []
-    key = generate_key(msg, key)
     for i in range(len(msg)):
         char = msg[i]
         if char.isupper():
@@ -42,55 +39,92 @@ def decrypt_vigenere(msg, key):
         decrypted_text.append(decrypted_char)
     return "".join(decrypted_text)
 
+# OTP encryption/decryption
+def apply_otp(msg, key):
+    result_text = []
+    for i in range(len(msg)):
+        result_char = chr(ord(msg[i]) ^ ord(key[i]))
+        result_text.append(result_char)
+    return "".join(result_text)
 
 # GUI Functions
 def encrypt_message():
     text = input_text.get("1.0", tk.END).strip()
-    key = key_entry.get().strip()
-    if not text or not key:
-        messagebox.showerror("Error", "Please provide both text and key.")
+    vigenere_key = vigenere_key_entry.get().strip()
+    if not text or not vigenere_key:
+        messagebox.showerror("Error", "Please provide text and a Vigenère key for encryption.")
         return
-    encrypted = encrypt_vigenere(text, key)
-    output_text.delete("1.0", tk.END)
-    output_text.insert(tk.END, encrypted)
 
+    # Step 1: Encrypt using Vigenère cipher
+    vigenere_key_full = generate_vigenere_key(text, vigenere_key)
+    vigenere_encrypted = encrypt_vigenere(text, vigenere_key_full)
+
+    # Step 2: Encrypt the Vigenère ciphertext with OTP
+    otp_key = generate_otp_key(vigenere_encrypted)
+    otp_encrypted = apply_otp(vigenere_encrypted, otp_key)
+
+    # Show the output
+    output_text.delete("1.0", tk.END)
+    output_text.insert(
+        tk.END,
+        f"Vigenere ciphertext: {vigenere_encrypted}\nFinal Ciphertext: {otp_encrypted}\nOTP Key (for Decryption): {otp_key}\n"
+    )
+
+    # Save OTP key to file
+    with open("otp_key.txt", "w") as key_file:
+        key_file.write(otp_key)
+    messagebox.showinfo("Key Saved", "The OTP key has been saved to 'otp_key.txt'. Please share it securely!")
 
 def decrypt_message():
     text = input_text.get("1.0", tk.END).strip()
-    key = key_entry.get().strip()
-    if not text or not key:
-        messagebox.showerror("Error", "Please provide both text and key.")
-        return
-    decrypted = decrypt_vigenere(text, key)
-    output_text.delete("1.0", tk.END)
-    output_text.insert(tk.END, decrypted)
+    otp_key = otp_key_entry.get().strip()
+    vigenere_key = vigenere_key_entry.get().strip()
 
+    if not text or not otp_key or not vigenere_key:
+        messagebox.showerror("Error", "Please provide ciphertext, the OTP key, and the Vigenère key for decryption.")
+        return
+
+    # Step 1: Decrypt using OTP
+    otp_decrypted = apply_otp(text, otp_key)
+
+    # Step 2: Decrypt the resulting Vigenère ciphertext
+    vigenere_key_full = generate_vigenere_key(otp_decrypted, vigenere_key)
+    decrypted_text = decrypt_vigenere(otp_decrypted, vigenere_key_full)
+
+    # Show the output
+    output_text.delete("1.0", tk.END)
+    output_text.insert(tk.END, f"Decrypted Text: {decrypted_text}")
 
 # GUI setup
 root = tk.Tk()
-root.title("Vigenère Cipher")
+root.title("Vigenère & OTP Combined Cipher")
 
 # Input text
 tk.Label(root, text="Input Text:").grid(row=0, column=0, padx=10, pady=5, sticky="w")
 input_text = tk.Text(root, height=5, width=50)
 input_text.grid(row=0, column=1, padx=10, pady=5)
 
-# Key entry
-tk.Label(root, text="Key:").grid(row=1, column=0, padx=10, pady=5, sticky="w")
-key_entry = tk.Entry(root, width=30)
-key_entry.grid(row=1, column=1, padx=10, pady=5)
+# Vigenère key entry
+tk.Label(root, text="Vigenère Key:").grid(row=1, column=0, padx=10, pady=5, sticky="w")
+vigenere_key_entry = tk.Entry(root, width=50)
+vigenere_key_entry.grid(row=1, column=1, padx=10, pady=5)
+
+# OTP key entry
+tk.Label(root, text="OTP Key (for Decryption Only):").grid(row=2, column=0, padx=10, pady=5, sticky="w")
+otp_key_entry = tk.Entry(root, width=50)
+otp_key_entry.grid(row=2, column=1, padx=10, pady=5)
 
 # Buttons
 encrypt_button = tk.Button(root, text="Encrypt", command=encrypt_message)
-encrypt_button.grid(row=2, column=0, padx=10, pady=10, sticky="w")
+encrypt_button.grid(row=3, column=0, padx=10, pady=10, sticky="w")
 
 decrypt_button = tk.Button(root, text="Decrypt", command=decrypt_message)
-decrypt_button.grid(row=2, column=1, padx=10, pady=10, sticky="w")
+decrypt_button.grid(row=3, column=1, padx=10, pady=10, sticky="w")
 
 # Output text
-tk.Label(root, text="Output Text:").grid(row=3, column=0, padx=10, pady=5, sticky="w")
-output_text = tk.Text(root, height=5, width=50)
-output_text.grid(row=3, column=1, padx=10, pady=5)
+tk.Label(root, text="Output:").grid(row=4, column=0, padx=10, pady=5, sticky="w")
+output_text = tk.Text(root, height=7, width=50)
+output_text.grid(row=4, column=1, padx=10, pady=5)
 
 # Run the application
 root.mainloop()
