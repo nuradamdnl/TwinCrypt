@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 import secrets
 import string
+from tkinter import font
 
 # Function to generate a Vigenère key by repeating it to match the length of the message
 def generate_vigenere_key(msg, keyword):
@@ -99,32 +100,35 @@ def decrypt_message():
 root = tk.Tk()
 root.title("Vigenère & OTP Combined Cipher")
 
+# Global font
+default_font = font.Font(family="Helvetica", size=20)
+
 # Input text
-tk.Label(root, text="Input Text:").grid(row=0, column=0, padx=10, pady=5, sticky="w")
-input_text = tk.Text(root, height=5, width=50)
-input_text.grid(row=0, column=1, padx=10, pady=5)
+tk.Label(root, text="Input Text:", font=default_font).grid(row=0, column=0, padx=20, pady=10, sticky="w")
+input_text = tk.Text(root, height=5, width=60, font=default_font)
+input_text.grid(row=0, column=1, padx=20, pady=10)
 
 # Vigenère key entry
-tk.Label(root, text="Vigenère Key:").grid(row=1, column=0, padx=10, pady=5, sticky="w")
-vigenere_key_entry = tk.Entry(root, width=50)
-vigenere_key_entry.grid(row=1, column=1, padx=10, pady=5)
+tk.Label(root, text="Vigenère Key:", font=default_font).grid(row=1, column=0, padx=20, pady=10, sticky="w")
+vigenere_key_entry = tk.Entry(root, width=60, font=default_font)
+vigenere_key_entry.grid(row=1, column=1, padx=20, pady=10)
 
 # OTP key entry
-tk.Label(root, text="OTP Key (for Decryption Only):").grid(row=2, column=0, padx=10, pady=5, sticky="w")
-otp_key_entry = tk.Entry(root, width=50)
-otp_key_entry.grid(row=2, column=1, padx=10, pady=5)
+tk.Label(root, text="OTP Key (for Decryption Only):", font=default_font).grid(row=2, column=0, padx=20, pady=10, sticky="w")
+otp_key_entry = tk.Entry(root, width=60, font=default_font)
+otp_key_entry.grid(row=2, column=1, padx=20, pady=10)
 
 # Buttons
-encrypt_button = tk.Button(root, text="Encrypt", command=encrypt_message)
-encrypt_button.grid(row=3, column=0, padx=10, pady=10, sticky="w")
+encrypt_button = tk.Button(root, text="Encrypt", command=encrypt_message, font=default_font)
+encrypt_button.grid(row=3, column=0, padx=20, pady=20, sticky="w")
 
-decrypt_button = tk.Button(root, text="Decrypt", command=decrypt_message)
-decrypt_button.grid(row=3, column=1, padx=10, pady=10, sticky="w")
+decrypt_button = tk.Button(root, text="Decrypt", command=decrypt_message, font=default_font)
+decrypt_button.grid(row=3, column=1, padx=20, pady=20, sticky="w")
 
 # Output text
-tk.Label(root, text="Output:").grid(row=4, column=0, padx=10, pady=5, sticky="w")
-output_text = tk.Text(root, height=7, width=50)
-output_text.grid(row=4, column=1, padx=10, pady=5)
+tk.Label(root, text="Output:", font=default_font).grid(row=4, column=0, padx=20, pady=10, sticky="w")
+output_text = tk.Text(root, height=8, width=60, font=default_font)
+output_text.grid(row=4, column=1, padx=20, pady=10)
 
 # Run the application
 root.mainloop()
